@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">FindBusinesses</string>
+    <string name="numFormatter">%d</string>
+    <string name="go_back">Go Back!</string>
+    <string name="queryHint">Search for (tacos, Pizza Hut, etc.)</string>
+    <string name="distanceFormatterOne">(</string>
+    <string name="distanceFormatterTwo">).</string>
+    <string name="resultsActivityDisplayName">Recommendations!</string>
+    <string name="getDirectionsActivityDisplayName">Directions!</string>
+    <string name="goToMapsText">View Businesses In a MapView!</string>
+    <string name="title_activity_business_map_view">BusinessMapView</string>
+
+    <string name="GoogleAPIKey"></string>
+    <string name="YelpConsumerKey"></string>
+    <string name="YelpConsumerSecret"></string>
+    <string name="YelpToken"></string>
+    <string name="YelpTokenSecret"></string>
+</resources>
