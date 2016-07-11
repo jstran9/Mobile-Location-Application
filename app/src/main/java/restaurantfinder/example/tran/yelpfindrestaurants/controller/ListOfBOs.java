@@ -155,7 +155,7 @@ public class ListOfBOs {
 		    for (int i = 0; i < businesses.length(); i++) {
 		        business = businesses.getJSONObject(i);
 		        location = business.getJSONObject("location"); // get the location
-		        metersToMiles = Double.parseDouble(business.getString("distance")); // the distance not converted
+				metersToMiles = business.getDouble("distance"); // the distance not converted
 		        metersToMiles = toMiles1.convert(Measure.valueOf(metersToMiles, MILE).doubleValue(MILE));
 		        decimalConversion = new DecimalFormat("##.##"); // converted distance (a String)
 				detailedRestaurantPage = business.getString("url"); // the website's url
@@ -180,8 +180,6 @@ public class ListOfBOs {
 	 */
 	public BusinessExtraInfo getCurrentStatus(String restaurantPageURL) {
 		Document doc;
-		String openStatus;
-		String businessCategory;
 		BusinessExtraInfo extraInformation = new BusinessExtraInfo();
 		try {
 			doc = Jsoup.connect(restaurantPageURL).get();
@@ -189,15 +187,10 @@ public class ListOfBOs {
 			if(tagContents.size() == 2) {
 				String categoryContents = tagContents.get(0).text();
 				String statusContents = tagContents.get(1).text();
-				businessCategory = categoryContents != null && categoryContents.length() > 0 ? categoryContents : "unable to retrieve the category";
-				openStatus = statusContents != null && statusContents.length() > 0 ? statusContents : "unable to determine if open";
+				// by default the data members have default values, they will only be overridden if values can be extracted from the restaurant's detailed page.
+				if(categoryContents != null && categoryContents.length() > 0) extraInformation.setBusinessCategory(categoryContents);
+				if(statusContents != null && statusContents.length() > 0) extraInformation.setOpenStatus(statusContents);
 			}
-			else {
-				businessCategory = "unable to retrieve the category";
-				openStatus = "unable to determine if open";
-			}
-			extraInformation.setBusinessCategory(businessCategory);
-			extraInformation.setOpenStatus(openStatus);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

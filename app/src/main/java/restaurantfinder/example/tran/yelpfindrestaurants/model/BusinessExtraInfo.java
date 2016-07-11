@@ -16,9 +16,11 @@ public class BusinessExtraInfo {
     private String mOpenStatus;
 
     /**
-     * allow instantiation of this class
+     * allow instantiation of this class and sets default values.
      */
     public BusinessExtraInfo() {
+        mBusinessCategory = "unable to retrieve the category";
+        mOpenStatus = "unable to determine if open";
     }
 
     /**
