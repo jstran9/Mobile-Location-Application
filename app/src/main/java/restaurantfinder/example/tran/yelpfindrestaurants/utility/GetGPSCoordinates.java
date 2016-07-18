@@ -92,7 +92,7 @@ public class GetGPSCoordinates {
                     if (location == null) {
                         continue;
                     }
-                    if (bestLocation == null || location.getAccuracy() < bestLocation.getAccuracy()) {
+                    if (bestLocation == null || location.getAccuracy() > bestLocation.getAccuracy()) {
                         mLatitude = location.getLatitude();
                         mLongitude = location.getLongitude();
                         bestLocation = location;
