@@ -23,10 +23,10 @@ public class Yelp {
     /**
     * Setup the Yelp API OAuth credentials.
     * OAuth credentials are available from the developer site, under Manage API access (version 2 API).
-    * @param consumerKey Consumer key
-    * @param consumerSecret Consumer secret
-    * @param token Token
-    * @param tokenSecret Token secret
+    * @param consumerKey Consumer key.
+    * @param consumerSecret Consumer secret.
+    * @param token Token.
+    * @param tokenSecret Token secret.
     */
     public Yelp(String consumerKey, String consumerSecret, String token, String tokenSecret)
     {
@@ -35,22 +35,24 @@ public class Yelp {
     }
 
     /**
-    * Search with term and location.
-    *
-    * @param term Search term
-    * @param latitude Latitude
-    * @param longitude Longitude
-    * @param limitSearchValue number of businesses
-    * @param sortValue sort type.
-    * @return JSON string response
+     * Search with term and location.
+     *
+     * @param term Search term.
+     * @param latitude Latitude.
+     * @param longitude Longitude.
+     * @param limitSearchValue number of businesses.
+     * @param sortValue sort type.
+     * @param offsetValue the range of businesses to return.
+     * @return JSON string response.
     */
-    public String search(String term, double latitude, double longitude, Integer limitSearchValue, String sortValue)
+    public String search(String term, double latitude, double longitude, Integer limitSearchValue, String sortValue, int offsetValue)
     {
         OAuthRequest request = new OAuthRequest(Verb.GET, "http://api.yelp.com/v2/search");
         request.addQuerystringParameter("term", term);
         request.addQuerystringParameter("ll", latitude + "," + longitude);
         request.addQuerystringParameter("limit", limitSearchValue.toString());
         request.addQuerystringParameter("sort", sortValue);
+        request.addQuerystringParameter("offset", String.valueOf(offsetValue));
         this.mService.signRequest(this.mAccessToken, request);
         Response response = request.send();
         return response.getBody(); // returns the search results.
