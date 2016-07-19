@@ -1,12 +1,10 @@
 package restaurantfinder.example.tran.yelpfindrestaurants.utility;
 
-import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
-import android.location.LocationListener;
 import android.location.LocationManager;
-import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 
 import java.util.List;
 
@@ -31,11 +29,6 @@ public class GetGPSCoordinates {
     private LocationManager mLocationManager;
 
     /**
-     * An object to receive notifications of location changes.
-     */
-    private LocationListener mLocationListener;
-
-    /**
      * The context of the calling activity
      */
     private Context mContext;
@@ -55,26 +48,10 @@ public class GetGPSCoordinates {
     }
 
     /**
-     * Sets the longitude for the user.
-     * @param longitude
-     */
-    public void setLongitude(double longitude) {
-        mLongitude = longitude;
-    }
-
-    /**
      * @return The latitude of the user.
      */
     public double getLatitude() {
         return mLatitude;
-    }
-
-    /**
-     * Sets the latitude for the user.
-     * @param latitude The user's current latitude.
-     */
-    public void setLatitude(double latitude) {
-        mLatitude = latitude;
     }
 
     /**
@@ -83,24 +60,22 @@ public class GetGPSCoordinates {
      */
     public Location getLocation() {
         mLocationManager = (LocationManager) mContext.getSystemService(Context.LOCATION_SERVICE);
-        List<String> providers = mLocationManager.getProviders(true);
+        List<String> providers = mLocationManager.getAllProviders();
         Location bestLocation = null;
         for (String provider : providers) {
             if (mLocationManager != null) {
-                try {
-                    Location location = mLocationManager.getLastKnownLocation(provider);
-                    if (location == null) {
-                        continue;
+                    if (ContextCompat.checkSelfPermission(mContext, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                            || ContextCompat.checkSelfPermission(mContext, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                        Location location = mLocationManager.getLastKnownLocation(provider);
+                        if (location == null) {
+                            continue;
+                        }
+                        if (bestLocation == null || location.getAccuracy() > bestLocation.getAccuracy()) {
+                            mLatitude = location.getLatitude();
+                            mLongitude = location.getLongitude();
+                            bestLocation = location;
+                        }
                     }
-                    if (bestLocation == null || location.getAccuracy() > bestLocation.getAccuracy()) {
-                        mLatitude = location.getLatitude();
-                        mLongitude = location.getLongitude();
-                        bestLocation = location;
-                    }
-                }
-                catch(SecurityException e) {
-                    e.printStackTrace();
-                }
             }
         }
         stopGPSTracking();
@@ -111,9 +86,8 @@ public class GetGPSCoordinates {
      * helper method to close the location manager and location listener objects after the user's latitude and longitude has been found.
      */
     public void stopGPSTracking() {
-        if(mLocationManager != null && mLocationListener != null) {
+        if(mLocationManager != null) {
             try {
-                mLocationManager.removeUpdates(mLocationListener);
                 mLocationManager = null;
             } catch (SecurityException e) {
                 e.printStackTrace();
