@@ -68,6 +68,11 @@ public class ListOfBOs {
 	 * A database object to help add to and read from the database.
 	 */
 	private BusinessObjectsDBHelper dbObject;
+
+	/**
+	 * The total number of businesses from the yelp search.
+	 */
+	private int mTotalBusinesses;
 	
 	/**
 	 * initialize an empty list of restaurant objects
@@ -134,11 +139,14 @@ public class ListOfBOs {
 	/**
 	 * this method uses the latitude and longitude from the calling Async task to update the contents of the lists of yelp search results
 	 * one list will be sorted and the other will be sorted by highest review and the most reviews.
+	 * @param latitude The user's current latitude (coordinate).
+	 * @param longitude The user's current longitude (coordinate).
+	 * @param offsetValue A value to determine which businesses get returned (first 20, next 20, etc).
 	 */
-	public void findBusinesses(double latitude, double longitude)
+	public void findBusinesses(double latitude, double longitude, int offsetValue)
 	{
 		// make the search.
-		String response = mYelp.search(mUserSearchTerm, latitude, longitude, mNumResults, mSortValue); // based off the current address
+		String response = mYelp.search(mUserSearchTerm, latitude, longitude, mNumResults, mSortValue, offsetValue); // based off the current address
 		JSONObject json, business, location, businessLatLng;
 		JSONArray businesses;
 		String detailedRestaurantPage, businessLng, businessLat;
@@ -148,6 +156,7 @@ public class ListOfBOs {
 		BusinessExtraInfo extraBusinessInformation;
 		try {
 			json = new JSONObject(response);
+			mTotalBusinesses = json.getInt("total");
 		    UnitConverter toMiles1 = METER.getConverterTo(MILE);
 		    businesses = json.getJSONArray("businesses");
 			// once a list of businesses can possibly be parsed, empty the database to prepare for new businesses to be inserted.
@@ -183,14 +192,11 @@ public class ListOfBOs {
 		BusinessExtraInfo extraInformation = new BusinessExtraInfo();
 		try {
 			doc = Jsoup.connect(restaurantPageURL).get();
-			Elements tagContents = doc.select("span.category-str-list, span.status.open, span.status.closed");
-			if(tagContents.size() == 2) {
-				String categoryContents = tagContents.get(0).text();
-				String statusContents = tagContents.get(1).text();
-				// by default the data members have default values, they will only be overridden if values can be extracted from the restaurant's detailed page.
-				if(categoryContents != null && categoryContents.length() > 0) extraInformation.setBusinessCategory(categoryContents);
-				if(statusContents != null && statusContents.length() > 0) extraInformation.setOpenStatus(statusContents);
-			}
+			String categoryContents = doc.select("li.category").text();
+			String statusContents = doc.select("li.biz-hours.clearfix").text();
+			// by default the data members have default values, they will only be overridden if values can be extracted from the business's detailed page.
+			if(categoryContents != null && categoryContents.length() > 0) extraInformation.setBusinessCategory(categoryContents);
+			if(statusContents != null && statusContents.length() > 0) extraInformation.setOpenStatus(statusContents);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -247,5 +253,12 @@ public class ListOfBOs {
 	{
 		Collections.sort(mBusinessObjectsList, new RestaurantObjectDistanceComparator()); // sort by descending distance.
 		return mBusinessObjectsList;
+	}
+
+	/**
+	 * @return The number of businesses from the yelp search call.
+     */
+	public int getTotalBusinesses() {
+		return mTotalBusinesses;
 	}
 }
