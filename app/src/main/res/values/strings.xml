@@ -7,8 +7,13 @@
     <string name="distanceFormatterTwo">).</string>
     <string name="resultsActivityDisplayName">Recommendations!</string>
     <string name="getDirectionsActivityDisplayName">Directions!</string>
-    <string name="goToMapsText">View Businesses In a MapView!</string>
+    <string name="goToMapsText">View On Map</string>
     <string name="title_activity_business_map_view">BusinessMapView</string>
+    <string name="nextResults">next</string>
+    <string name="previousResults">previous</string>
+    <string name="defaultDialogMessage">One moment, getting businesses related to the search terms!</string>
+    <string name="previousDialogMessage">Fetching previous business results!</string>
+    <string name="nextDialogMessage">Fetching the next business results!</string>
 
     <string name="GoogleAPIKey"></string>
     <string name="YelpConsumerKey"></string>
