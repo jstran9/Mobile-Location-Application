@@ -3,8 +3,12 @@ package restaurantfinder.example.tran.yelpfindrestaurants.controller;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
@@ -57,6 +61,31 @@ public class SearchResults extends AppCompatActivity {
      */
     private Button mStartMapActivity;
 
+    /**
+     * gets previous results
+     */
+    private Button mPrevious;
+
+    /**
+     * get next results
+     */
+    private Button mNext;
+
+    /**
+     * number of businesses from the Yelp Search query.
+     */
+    private int mNumBusinesses;
+
+    /**
+     * Helps control which results are being returned from the user search.
+     */
+    private int mOffsetValue;
+
+    /**
+     * the number of results returned from the yelp search.
+     */
+    private final int NUM_RETURNED_RESULTS = 20;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,6 +94,16 @@ public class SearchResults extends AppCompatActivity {
         mBusinessObjectsList = new ArrayList<>();
         mListOfBusinesses = (ListView) findViewById(R.id.resultListView);
         mStartMapActivity = (Button) findViewById(R.id.goToMapsView);
+        mPrevious = (Button) findViewById(R.id.previousResults);
+        mNext = (Button) findViewById(R.id.nextResults);
+
+        mOffsetValue = 0;
+        mNumBusinesses = 0;
+
+        mPrevious.setClickable(false);
+        mPrevious.setVisibility(View.INVISIBLE);
+        mNext.setClickable(false);
+        mNext.setVisibility(View.INVISIBLE);
 
         getUserSearchTerm();
 
@@ -82,21 +121,81 @@ public class SearchResults extends AppCompatActivity {
         mLatitude = getLatAndLong.getLatitude();
         mLongitude = getLatAndLong.getLongitude();
 
+        setOnClickListeners();
+
+        getSearchResults(1);
+    }
+
+    /**
+     * helper method to determine if the previous or next button should be disabled from being clicked.
+     */
+    private void checkUserButtons() {
+        if(mOffsetValue == 0) {
+            mPrevious.setClickable(false);
+            mPrevious.setVisibility(View.INVISIBLE);
+        }
+        else {
+            mPrevious.setClickable(true);
+            mPrevious.setVisibility(View.VISIBLE);
+        }
+
+        int numResults = NUM_RETURNED_RESULTS;
+        if(mOffsetValue * numResults + numResults > mNumBusinesses) {
+            mNext.setClickable(false);
+            mNext.setVisibility(View.INVISIBLE);
+        }
+        else {
+            mNext.setClickable(true);
+            mNext.setVisibility(View.VISIBLE);
+        }
+    }
+
+    /**
+     * helper method to set the listeners of the buttons on this screen.
+     */
+    private void setOnClickListeners() {
         mStartMapActivity.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-            Intent launchMapActivity = new Intent(SearchResults.this, BusinessMapView.class);
-            launchMapActivity.putExtra("currentLat", mLatitude);
-            launchMapActivity.putExtra("currentLng", mLongitude);
-            startActivity(launchMapActivity);
+                Intent launchMapActivity = new Intent(SearchResults.this, BusinessMapView.class);
+                launchMapActivity.putExtra("currentLat", mLatitude);
+                launchMapActivity.putExtra("currentLng", mLongitude);
+                startActivity(launchMapActivity);
             }
         });
 
+        mPrevious.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(mOffsetValue > 0) {
+                    mOffsetValue--;
+                    getSearchResults(2);
+                }
+            }
+        });
+
+        mNext.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int numResults = NUM_RETURNED_RESULTS;
+                if(mOffsetValue * numResults + numResults < mNumBusinesses) {
+                    mOffsetValue++;
+                    getSearchResults(3);
+                }
+            }
+        });
+    }
+
+    /**
+     * helper method that runs a yelp search or queries the database if internet is not currently available.
+     */
+    private void getSearchResults(int dialogMessageType) {
         TestForNetworkConnection testForNetworkConnection = new TestForNetworkConnection(this);
 
         if(testForNetworkConnection.checkForInternetConnection()) {
             // there is internet connectivity, so try to use the Yelp Search.
             GetRestaurantListings getROObjects = new GetRestaurantListings(this);
+            getROObjects.setDialogMessage(dialogMessageType);
             getROObjects.execute();
         }
         else {
@@ -115,8 +214,6 @@ public class SearchResults extends AppCompatActivity {
         resultListAdapter = new CustomResultsAdapter(this, mBusinessObjectsList);
         mListOfBusinesses.setAdapter(resultListAdapter);
     }
-
-
 
     /**
      * helper method to retrieve what the user entered in the previous activity.
@@ -158,9 +255,9 @@ public class SearchResults extends AppCompatActivity {
 
     private class GetRestaurantListings extends AsyncTask<Void, Void, Void> {
         /**
-         * the number of results returned from the yelp search.
+         * The message to inform the user that the query is being performed.
          */
-        private final Integer NUM_RETURNED_RESULTS = 20;
+        private String mDialogMessage;
 
         /**
          * current activity context
@@ -180,8 +277,22 @@ public class SearchResults extends AppCompatActivity {
         /**
          * @param context The context of the calling activity.
          */
-        public GetRestaurantListings(Context context) {
-            mContext = context;
+        public GetRestaurantListings(Context context) { mContext = context; }
+
+        /**
+         * Sets a dialog message for the user.
+         * @param dialogMessageType The type of message to display to the user.
+         */
+        public void setDialogMessage(int dialogMessageType) {
+            if(dialogMessageType == 1) {
+                mDialogMessage = mContext.getResources().getString(R.string.defaultDialogMessage);
+            }
+            else if(dialogMessageType == 2) {
+                mDialogMessage = mContext.getResources().getString(R.string.previousDialogMessage);
+            }
+            else if(dialogMessageType == 3) {
+                mDialogMessage = mContext.getResources().getString(R.string.nextDialogMessage);
+            }
         }
 
         /**
@@ -191,7 +302,7 @@ public class SearchResults extends AppCompatActivity {
         protected void onPreExecute() {
             super.onPreExecute();
             mDialog = new ProgressDialog(mContext);
-            mDialog.setMessage("One moment, getting businesses related to the search terms!.\n");
+            mDialog.setMessage(mDialogMessage);
             mDialog.show();
         }
 
@@ -208,8 +319,10 @@ public class SearchResults extends AppCompatActivity {
             mListOfRestaurantObjects.setNumResults(NUM_RETURNED_RESULTS);
             mListOfRestaurantObjects.setUserSearchTerm(mSearchTerms);
 
-            // perform the yelp search
-            mListOfRestaurantObjects.findBusinesses(mLatitude, mLongitude);
+            /**
+             * multiplication by num_returned_results as this will help offset the businesses returned.
+             */
+            mListOfRestaurantObjects.findBusinesses(mLatitude, mLongitude, mOffsetValue * NUM_RETURNED_RESULTS);
             return null;
         }
 
@@ -220,6 +333,9 @@ public class SearchResults extends AppCompatActivity {
         @Override
         protected void onPostExecute(Void aVoid) {
             mBusinessObjectsList = mListOfRestaurantObjects.getBusinessObjects();
+            mNumBusinesses = mListOfRestaurantObjects.getTotalBusinesses();
+
+            checkUserButtons();
 
             if(mBusinessObjectsList.size() > 0) {
                 resultListAdapter = new CustomResultsAdapter(mContext, mBusinessObjectsList);
