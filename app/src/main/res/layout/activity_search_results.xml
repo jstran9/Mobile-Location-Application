@@ -25,4 +25,27 @@
         android:id="@+id/resultListView">
     </ListView>
 
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/previousResults"
+        android:id="@+id/previousResults"
+        android:layout_above="@+id/resultListView"
+        android:layout_toLeftOf="@+id/nextResults"
+        android:layout_toStartOf="@+id/nextResults">
+
+    </Button>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/nextResults"
+        android:id="@+id/nextResults"
+        android:layout_alignParentTop="true"
+        android:layout_alignRight="@+id/resultListView"
+        android:layout_alignEnd="@+id/resultListView">
+
+    </Button>
+
+
 </RelativeLayout>
